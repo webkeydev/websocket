@@ -1166,6 +1166,11 @@ func (c *Conn) UnderlyingConn() net.Conn {
 	return c.conn
 }
 
+func (c *Conn) SetUnderlyingConn(conn net.Conn) {
+	c.conn = conn
+	c.br = bufio.NewReader(conn)
+}
+
 // EnableWriteCompression enables and disables write compression of
 // subsequent text and binary messages. This function is a noop if
 // compression was not negotiated with the peer.
