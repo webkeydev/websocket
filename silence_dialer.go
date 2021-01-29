@@ -27,29 +27,8 @@ type SilenceDialer struct {
 	WriteBufferPool BufferPool
 }
 
-// Dial creates a new client connection by calling DialContext with a background context.
-// DefaultDialer is a dialer with all fields set to the default values.
-var DefaultSilenceDialer = &SilenceDialer{}
-
-// nilDialer is dialer to use when receiver is nil.
-var nilSilenceDialer = *DefaultSilenceDialer
-
-// SilenceDialer creates a new client connection. Use requestHeader to specify the
-// origin (Origin), subprotocols (Sec-WebSocket-Protocol) and cookies (Cookie).
-// Use the response.Header to get the selected subprotocol
-// (Sec-WebSocket-Protocol) and cookies (Set-Cookie).
-//
-// The context will be used in the request and in the Dialer.
-//
-// If the WebSocket handshake fails, ErrBadHandshake is returned along with a
-// non-nil *http.Response so that callers can handle redirects, authentication,
-// etcetera. The response body may not contain the entire response and does not
-// need to be closed by the application.
-func (d *SilenceDialer) DialContext(netConn net.Conn) (*Conn, error) {
-	if d == nil {
-		d = &nilSilenceDialer
-	}
-
+// WrapConnection creates a websocket connection from a net connection.
+func (d *SilenceDialer) WrapConnection(netConn net.Conn) (*Conn, error) {
 	conn := newConn(netConn, true, d.ReadBufferSize, d.WriteBufferSize, d.WriteBufferPool, nil, nil)
 
 	return conn, nil
