@@ -89,6 +89,8 @@ var ErrCloseSent = errors.New("websocket: close sent")
 // read limit set for the connection.
 var ErrReadLimit = errors.New("websocket: read limit exceeded")
 
+var ErrReadAlreadyStopped = errors.New("websocket: timeout")
+
 // netError satisfies the net Error interface.
 type netError struct {
 	msg       string
@@ -1067,6 +1069,25 @@ func (c *Conn) ReadMessage() (messageType int, p []byte, err error) {
 	}
 	p, err = ioutil.ReadAll(r)
 	return messageType, p, err
+}
+
+// SafeReadMessage is a helper method for getting a reader using NextReader and
+// reading from that reader to a buffer.
+func (c *Conn) SafeReadMessage(lockChan chan struct{}) (messageType int, p []byte, err error) {
+	var r io.Reader
+	messageType, r, err = c.NextReader()
+	if err != nil {
+		return messageType, nil, err
+	}
+	select {
+	case lockChan <- struct{}{}:
+		p, err = ioutil.ReadAll(r)
+		<-lockChan
+		return messageType, p, err
+	default:
+		//TODO read r
+		return messageType, nil, err
+	}
 }
 
 // SetReadDeadline sets the read deadline on the underlying network connection.
